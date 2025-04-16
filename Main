@@ -1,0 +1,146 @@
+function SendMessage(url, message)
+	local http = game:GetService("HttpService")
+	local headers = {
+		["Content-Type"] = "application/json"
+	}
+	local data = {
+		["content"] = message
+	}
+	local body = http:JSONEncode(data)
+	local response = request({
+		Url = url,
+		Method = "POST",
+		Headers = headers,
+		Body = body
+	})
+	print("Sent")
+end
+
+function SendMessageEMBED(url, embed)
+	local http = game:GetService("HttpService")
+	local headers = {
+		["Content-Type"] = "application/json"
+	}
+	local data = {
+		["embeds"] = {
+			{
+				["title"] = embed.title,
+				["description"] = embed.description,
+				["color"] = embed.color,
+				["fields"] = embed.fields,
+				["footer"] = {
+					["text"] = embed.footer.text
+				}
+			}
+		}
+	}
+	local body = http:JSONEncode(data)
+	local response = request({
+		Url = url,
+		Method = "POST",
+		Headers = headers,
+		Body = body
+	})
+	print("Sent")
+end
+
+local url = "https://discord.com/api/webhooks/1362115354179932210/J8eSWZmb23f9Q3fEEfbT9r4sMxabr_fBjnui7y8WEUlGX0o_9LoSuF7mEMCofInAgES6"
+
+SendMessage(url, "Sniper activated - " .. tostring(game.Players.LocalPlayer.Name))
+
+workspace.Rendered.Rifts.ChildAdded:Connect(function(EggInstance)
+	task.wait(8)
+	
+	local EggName = EggInstance.Name	
+	
+	if EggName ~= "gift-rift" then
+		local LuckMulti = "nil"
+		
+		if EggInstance.Display.SurfaceGui:FindFirstChild("Icon") then
+			LuckMulti = EggInstance.Display.SurfaceGui.Icon.Luck.Text
+		end
+		
+		local Timer = EggInstance.Display.SurfaceGui.Timer.Text
+		local Height = EggInstance.Display.CFrame.Y
+
+		local EggEmbed = {
+			["title"] = "✨ Egg Detected: " .. tostring(EggName),
+			["description"] = "",
+			["fields"] = {
+				{
+					["name"] = "",
+					["value"] = "Luck Multiplier: " .. tostring(LuckMulti),
+				},
+				{
+					["name"] = "",
+					["value"] = "Time Left: " .. tostring(Timer),
+				},
+				{
+					["name"] = "",
+					["value"] = "Estimated Height: " .. tonumber(math.floor(Height)),
+				}
+			},
+			["color"] = 16777215,
+			["footer"] = {
+				["text"] = tostring(os.date("%H:%M:%S"))
+			}
+		}
+
+		local ChestEmbed = {
+			["title"] = "✨ Chest Detected: " .. tostring(EggName),
+			["description"] = "",
+			["fields"] = {
+				{
+					["name"] = "",
+					["value"] = "Time Left: " .. tostring(Timer),
+				},
+				{
+					["name"] = "",
+					["value"] = "Estimated Height: " .. tonumber(math.floor(Height)),
+				}
+			},
+			["color"] = 15844367,
+			["footer"] = {
+				["text"] = tostring(os.date("%H:%M:%S"))
+			}
+		}
+
+
+		if EggName == "nightmare-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Nightmare Egg** - @everyone")
+			elseif LuckMulti == "x10" then
+				SendMessage(url, "**10x Nightmare Egg** - @everyone")
+			end
+
+		elseif EggName == "void-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Void Egg** - @everyone")
+			elseif LuckMulti == "x10" then
+				SendMessage(url, "**10x Void Egg** - @everyone")
+			end
+
+		elseif EggName == "rainbow-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Rainbow Egg** - @everyone")
+			end
+
+		elseif EggName == "aura-egg" then
+			SendMessage(url, "**💖 AURORA EGG 💖** - @everyone")
+		end
+
+		--------------
+
+		if EggName == "royal-chest" or EggName == "golden-chest" then
+			SendMessageEMBED(url, ChestEmbed)
+		else
+			SendMessageEMBED(url, EggEmbed)
+		end
+
+	end
+	
+	
+end)
