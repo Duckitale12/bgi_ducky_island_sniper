@@ -46,7 +46,7 @@ end
 
 local url = "https://discord.com/api/webhooks/1362115354179932210/J8eSWZmb23f9Q3fEEfbT9r4sMxabr_fBjnui7y8WEUlGX0o_9LoSuF7mEMCofInAgES6"
 
-SendMessage(url, "**Sniper activated - ** @" .. tostring(game.Players.LocalPlayer.Name))
+SendMessage(url, "**## Sniper activated - ** @" .. tostring(game.Players.LocalPlayer.Name))
 
 workspace.Rendered.Rifts.ChildAdded:Connect(function(EggInstance)
 	task.wait(8)
