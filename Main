@@ -1,78 +1,3 @@
-local PlaceID = game.PlaceId
-local AllIDs = {}
-local foundAnything = ""
-local actualHour = os.date("!*t").hour
-local Deleted = false
-
-local File = pcall(function()
-	AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
-end)
-
-if not File then
-	table.insert(AllIDs, actualHour)
-	writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
-end
-
-function TPReturner()
-	local Site;
-	if foundAnything == "" then
-		Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
-	else
-		Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
-	end
-	local ID = ""
-	if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
-		foundAnything = Site.nextPageCursor
-	end
-	local num = 0;
-	for i,v in pairs(Site.data) do
-		local Possible = true
-		ID = tostring(v.id)
-		if tonumber(v.maxPlayers) > tonumber(v.playing) then
-			for _,Existing in pairs(AllIDs) do
-				if num ~= 0 then
-					if ID == tostring(Existing) then
-						Possible = false
-					end
-				else
-					if tonumber(actualHour) ~= tonumber(Existing) then
-						local delFile = pcall(function()
-							delfile("NotSameServers.json")
-							AllIDs = {}
-							table.insert(AllIDs, actualHour)
-						end)
-					end
-				end
-				num = num + 1
-			end
-			if Possible == true then
-				table.insert(AllIDs, ID)
-				wait()
-				pcall(function()
-					writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
-					wait()
-					game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
-				end)
-				wait(4)
-			end
-		end
-	end
-end
-
-function ServerHop()
-	while wait() do
-		pcall(function()
-			TPReturner()
-			if foundAnything ~= "" then
-				TPReturner()
-			end
-		end)
-	end
-end
-
-
-----------
-
 function SendMessage(url, message)
 	local http = game:GetService("HttpService")
 	local headers = {
@@ -88,6 +13,7 @@ function SendMessage(url, message)
 		Headers = headers,
 		Body = body
 	})
+	print("Sent")
 end
 
 function SendMessageEMBED(url, embed)
@@ -118,120 +44,105 @@ function SendMessageEMBED(url, embed)
 	print("Sent")
 end
 
-local url = "https://discord.com/api/webhooks/1362179485138686032/_WkAElqFAcSC29tyl5ZyCommJp9qp0IdVXfTPaBfVVz-r_kJt6LKVPUiFrXgYUDtvSLG"
+local url = "https://discord.com/api/webhooks/1362115354179932210/J8eSWZmb23f9Q3fEEfbT9r4sMxabr_fBjnui7y8WEUlGX0o_9LoSuF7mEMCofInAgES6"
 
-----------
+SendMessage(url, "**Sniper activated - ** @" .. tostring(game.Players.LocalPlayer.Name))
 
-local ScriptVersion = "0.1.2v"
-
-local PlayerCount = #game.Players:GetPlayers()
-local MaxPlayers = 12
-local FoundIslands = {}
-
-for _, Island in workspace.Rendered.Rifts:GetChildren() do
-	if Island.Display.SurfaceGui:FindFirstChild("Icon") then
-		table.insert(FoundIslands, tostring(Island.Name .. " (" .. Island.Display.SurfaceGui.Icon.Luck.Text .. ")"))
-
-		if Island.Name == "aura-egg" then
-			SendMessage(url, "**❗ AURA EGG FOUND ❗** - USER:  @" .. tostring(game.Players.LocalPlayer.Name) .. "  - @everyone")
-
-			task.wait(200)
+workspace.Rendered.Rifts.ChildAdded:Connect(function(EggInstance)
+	task.wait(8)
+	
+	local EggName = EggInstance.Name	
+	
+	if EggName ~= "gift-rift" then
+		local LuckMulti = "nil"
+		
+		if EggInstance.Display.SurfaceGui:FindFirstChild("Icon") then
+			LuckMulti = EggInstance.Display.SurfaceGui.Icon.Luck.Text
 		end
-	end
-end
+		
+		local Timer = EggInstance.Display.SurfaceGui.Timer.Text
+		local Height = EggInstance.Display.CFrame.Y
 
-task.wait(0.1)
-
-local LF_EGG = "void-egg (x25)"
-
-local Embed = {
-	["title"] = "🥚 Eggs Found: ",
-	["description"] = tostring(table.concat(FoundIslands, "\n ")) .. " @everyone",
-	["fields"] = {
-		{
-			["name"] = "Searching For:",
-			["value"] = "void-egg (x25)",
-		},
-	},
-	["color"] = 16777215,
-	["footer"] = {
-		["text"] = tostring(os.date("%H:%M:%S")) .. " | " .. tostring(ScriptVersion)
-	}
-}
-
----
-
-SendMessageEMBED(url, Embed)
-
-task.wait(0.5)
-
-if table.find(FoundIslands, LF_EGG) then
-
-	for _, FoundEgg in workspace.Rendered.Rifts:GetChildren() do
-		if FoundEgg.Display.SurfaceGui:FindFirstChild("Icon") then
-			local LFstring = tostring(FoundEgg.Name .. " (" .. FoundEgg.Display.SurfaceGui.Icon.Luck.Text .. ")")
-
-			if LFstring == LF_EGG then
-				warn("Found!")
-
-				local LuckMulti = FoundEgg.Display.SurfaceGui.Icon.Luck.Text
-				local Timer = FoundEgg.Display.SurfaceGui.Timer.Text
-				local Height = FoundEgg.Display.CFrame.Y
-
-				local Embed_FOUND = {
-					["title"] = "❗ EGG HAS BEEN FOUND ❗",
-					["description"] = LF_EGG .. " has been found!",
-					["fields"] = {
-						{
-							["name"] = "Egg",
-							["value"] = tostring(FoundEgg.Name),
-						},
-						{
-							["name"] = "Luck Multiplier",
-							["value"] = tostring(LuckMulti),
-						},
-						{
-							["name"] = "Time Left",
-							["value"] = tostring(Timer),
-						},
-						{
-							["name"] = "Estimated Height",
-							["value"] = tonumber(math.floor(Height)),
-						},
-						{
-							["name"] = "Account Username",
-							["value"] = "@" .. tostring(game.Players.LocalPlayer.Name) .. " - AUTO-LEAVING IN 45 SECCONDS!",
-						},
-						{
-							["name"] = "Server Space",
-							["value"] = tostring(PlayerCount) .. "/" .. tostring(MaxPlayers) .. " Players",
-						},
-					},
-					["color"] = 5763719,
-					["footer"] = {
-						["text"] = tostring(os.date("%H:%M:%S")) .. " | " .. tostring(ScriptVersion)
-					}
+		local EggEmbed = {
+			["title"] = "✨ Egg Detected: " .. tostring(EggName),
+			["description"] = "",
+			["fields"] = {
+				{
+					["name"] = "",
+					["value"] = "Luck Multiplier: " .. tostring(LuckMulti),
+				},
+				{
+					["name"] = "",
+					["value"] = "Time Left: " .. tostring(Timer),
+				},
+				{
+					["name"] = "",
+					["value"] = "Estimated Height: " .. tonumber(math.floor(Height)),
 				}
+			},
+			["color"] = 16777215,
+			["footer"] = {
+				["text"] = tostring(os.date("%H:%M:%S"))
+			}
+		}
 
-				SendMessage(url, "**✨ EGG FOUND** - @everyone")
-				SendMessageEMBED(url, Embed_FOUND)
-				
-				task.wait(30)
-				
-				SendMessage(url, "*Leaving server in 15s...*")
+		local ChestEmbed = {
+			["title"] = "✨ Chest Detected: " .. tostring(EggName),
+			["description"] = "",
+			["fields"] = {
+				{
+					["name"] = "",
+					["value"] = "Time Left: " .. tostring(Timer),
+				},
+				{
+					["name"] = "",
+					["value"] = "Estimated Height: " .. tonumber(math.floor(Height)),
+				}
+			},
+			["color"] = 15844367,
+			["footer"] = {
+				["text"] = tostring(os.date("%H:%M:%S"))
+			}
+		}
 
-				task.wait(15)
-				
-				SendMessage(url, "*Looking for more eggs...*")
-				
-				task.wait(1)
-				
-				ServerHop()
+
+		if EggName == "nightmare-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Nightmare Egg** - @everyone")
+			elseif LuckMulti == "x10" then
+				SendMessage(url, "**10x Nightmare Egg** - @everyone")
 			end
-		end
-	end
 
-else
-	SendMessage(url, "*Changing servers...*")
-	ServerHop()
-end
+		elseif EggName == "void-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Void Egg** - @everyone")
+			elseif LuckMulti == "x10" then
+				SendMessage(url, "**10x Void Egg** - @everyone")
+			end
+
+		elseif EggName == "rainbow-egg" then
+
+			if LuckMulti == "x25" then
+				SendMessage(url, "**25x Rainbow Egg** - @everyone")
+			end
+
+		elseif EggName == "aura-egg" then
+			SendMessage(url, "**💖 AURORA EGG 💖** - @everyone")
+		end
+
+		--------------
+
+		if EggName == "royal-chest" or EggName == "golden-chest" then
+			SendMessageEMBED(url, ChestEmbed)
+		else
+			SendMessageEMBED(url, EggEmbed)
+		end
+
+	end
+	
+	
+end)
+
+--loadstring(game:HttpGet("https://raw.githubusercontent.com/Duckitale12/bgi_ducky_island_sniper/refs/heads/main/Main?token=GHSAT0AAAAAADCLNQNDH2X6PGEZJCR2CMQM2AABRZA"))()
